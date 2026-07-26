@@ -84,7 +84,7 @@ The application supports two user roles:
 
 ## Shelter Info
 
-![Shelter Info](screenshots/shelter-info.png)
+![Shelter Info]
 <img width="1914" height="953" alt="image" src="https://github.com/user-attachments/assets/77c1fb0a-1cc9-4028-9222-641185ab4042" />
 
 
