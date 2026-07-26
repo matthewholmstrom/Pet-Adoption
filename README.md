@@ -77,6 +77,17 @@ The application supports two user roles:
 ![Messages]<img width="1905" height="941" alt="image" src="https://github.com/user-attachments/assets/210e24b3-d641-4ec4-96b5-cc263c2c139e" />
 
 
+## Signup
+
+![Signup] <img width="1912" height="936" alt="image" src="https://github.com/user-attachments/assets/fc2d624a-45cf-4f2b-9cef-a1a09b7a7c44" />
+
+
+## Shelter Info
+
+![Shelter Info](screenshots/shelter-info.png)
+<img width="1914" height="953" alt="image" src="https://github.com/user-attachments/assets/77c1fb0a-1cc9-4028-9222-641185ab4042" />
+
+
 ---
 
 # Technologies
