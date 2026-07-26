@@ -1,70 +1,165 @@
-# Getting Started with Create React App
+# Pet Adoption Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack pet adoption web application that connects adopters with animal shelters. Users can create accounts, browse available pets, submit adoption applications, communicate with shelters, and manage pet listings.
 
-## Available Scripts
+The application supports two user roles:
 
-In the project directory, you can run:
+- **Adopters** who search for pets, submit applications, save favorites, and communicate with shelters.
+- **Shelters** who manage shelter profiles, create pet listings, review applications, and communicate with adopters.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+# Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## User Authentication
 
-### `npm test`
+- User signup and login system
+- Adopter and shelter roles
+- Secure password storage using bcrypt hashing
+- Environment variable configuration using dotenv
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Adopter Features
 
-### `npm run build`
+- Create an adopter account
+- Browse available pets
+- View detailed pet information
+- Search for pets
+- Submit adoption applications
+- Save favorite pets
+- Message shelters
+- View applications and messages
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Shelter Features
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Create shelter accounts
+- Create and update shelter profiles
+- Add new pets
+- Upload pet images
+- Edit pet information
+- Manage shelter pets
+- Review adoption applications
+- Communicate with adopters
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Messaging System
 
-### `npm run eject`
+- User-to-shelter conversations
+- Message history storage
+- Adoption communication workflow
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Screenshots
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Home Page
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+![Home Page]<img width="1903" height="952" alt="image" src="https://github.com/user-attachments/assets/ad5027d9-34c9-450e-a483-695887275845" />
+<img width="1912" height="947" alt="image" src="https://github.com/user-attachments/assets/b258e6fc-66e1-4651-ae02-355d69152178" />
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Pet Listings
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+![Pet Listings]
+<img width="1909" height="947" alt="image" src="https://github.com/user-attachments/assets/c7f05abe-679e-413a-b472-7f1b891e20ad" />
 
-### Code Splitting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Pet Details / Application
 
-### Analyzing the Bundle Size
+![Pet Details]<img width="1907" height="955" alt="image" src="https://github.com/user-attachments/assets/1bc3036e-bb4d-4022-8e08-60476f1727e9" />
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### Making a Progressive Web App
+## Shelter Dashboard
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+![Shelter Dashboard]<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/d238d219-6fd9-48c0-aad2-d1d8457cd62a" />
 
-### Advanced Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Messaging System
 
-### Deployment
+![Messages]<img width="1905" height="941" alt="image" src="https://github.com/user-attachments/assets/210e24b3-d641-4ec4-96b5-cc263c2c139e" />
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Technologies
+
+## Frontend
+
+- React
+- React Router
+- JavaScript
+- CSS
+- React Icons
+
+## Backend
+
+- Node.js
+- Express.js
+- MySQL
+- mysql2/promise
+- bcrypt
+- dotenv
+- multer
+
+## Database
+
+- MySQL
+
+---
+
+# Database Structure
+
+The application uses a relational MySQL database.
+
+Main tables include:
+
+- `users`
+- `shelters`
+- `pets`
+- `applications`
+- `conversations`
+- `messages`
+- `favorites`
+
+Relationships:
+
+- Users can have adopter or shelter roles.
+- Shelters are connected to users.
+- Shelters can manage multiple pets.
+- Adopters can submit applications for pets.
+- Conversations connect adopters and shelters.
+
+---
+
+# Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/matthewholmstrom/Pet-Adoption.git
+```
+
+Install dependencies:
+
+Frontend:
+```bash
+npm install
+npm start
+```
+
+Backend:
+```bash
+cd backend
+npm install
+npm start
+```
+
+Create a backend `.env` file with your database credentials.
+
+---
+
+# Future Improvements
+
+- Deploy production version
+- Add JWT authentication
+- Move image storage to Cloudinary
+- Improve search functionality
+
