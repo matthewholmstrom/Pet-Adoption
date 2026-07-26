@@ -1,0 +1,204 @@
+.signup-main{
+    display: flex;
+    flex:1;
+    width:100%;
+    min-width: 0;
+}
+
+.signup-left{
+
+      background-color:#FFF8E5;
+      flex:1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+          min-width: 0;
+          color:#3E5A70;
+          border-right: 2px solid #3E5A70;
+}
+
+
+
+.signup-left h2{
+
+      color:#3E5A70;
+}
+
+
+.signup-right{
+background-color:#E3F3FF;
+      flex:1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+          min-width: 0;
+
+}
+
+
+.paw-icon{
+    height:50px;
+    width:50px;
+}
+
+.signup-left-container h2{color:#3E5A70}
+
+
+.signup-right-form{
+
+    padding:35px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    gap:16px;
+    border-radius: 12px;
+    font-weight: 600;
+    max-width: 320px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.1);
+    width:100%;
+
+    
+}
+
+
+
+
+
+.signup-right-form h2{
+    
+    
+ color: #3E5A70;
+ font-size: 32px;
+ font-weight: 600;
+ margin-bottom: 12px;
+}
+
+
+.signup-radio{
+    display: flex;
+    justify-content: space-between;
+}
+
+.signup-btn{
+background-color: #3E5A70;
+  color: white;
+  border: 2px solid #FFF8E5;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+}
+
+
+.signup-right-form input{
+
+    padding:12px;
+    border-radius: 12px;
+    
+    
+}
+
+
+.signup-left-container{
+
+    text-align: center;
+}
+
+
+.signup-left-container p{
+display: flex;
+gap:10px;
+text-align: center;
+justify-content: center;
+}
+
+
+
+.signup-left-container a{
+color: #3E5A70;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.signup-left-container a:hover{
+
+    text-decoration: underline;
+
+}
+
+
+@media (max-width:800px){
+
+
+
+    .signup-main{
+    display: flex;
+    flex-direction: column;
+
+}
+
+
+
+
+.signup-left{
+
+    
+      flex:1;
+      padding-bottom: 15px;
+            padding-top: 15px;
+
+      
+
+
+}
+
+
+
+.signup-right{
+
+      
+      flex:1;
+      padding:15px;
+
+
+      
+
+
+}
+
+
+
+.signup-right-form{
+
+    padding:20px;
+    
+    height: 50%;
+    gap:10px;
+
+}
+
+
+.signup-right-form input{
+
+    padding:6px;
+
+}
+
+
+
+
+.signup-right-form h2{
+    
+ color: #3E5A70;
+ font-size: 18px;
+ margin-top: 5px;
+}
+
+
+
+}
