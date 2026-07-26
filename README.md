@@ -174,3 +174,8 @@ Create a backend `.env` file with your database credentials.
 - Move image storage to Cloudinary
 - Improve search functionality
 
+# Image Credits
+
+Images used in this project were sourced from Unsplash.
+
+https://unsplash.com
