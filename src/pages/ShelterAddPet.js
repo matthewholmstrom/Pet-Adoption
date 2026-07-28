@@ -3,6 +3,7 @@ import { useState } from "react";
 import { getUser } from "../components/Auth";
 
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 
 
@@ -11,6 +12,7 @@ export default function ShelterAddPet (){
 
     const person = getUser();
     const user_id = person?.userId;
+    const [toast, setToast] = useState(null);
 
     const [formData, setFormData] = useState({
  name: "",
@@ -40,13 +42,12 @@ export default function ShelterAddPet (){
 
 
 
+
+
+
     const [image_File, set_Image_File] = useState(null);
 
     const [image_Preview, set_Image_Preview] = useState(null);
-
-
-
-
 
 
    
@@ -77,6 +78,15 @@ const handleImageChange =(e) =>{
             return
         }
 
+
+            if(formData.age && isNaN(Number(formData.age))){
+
+        setToast({type: "error",
+            message: "Age must be a number."
+        });
+        return
+    }
+
         const data = new FormData();
 
 
@@ -101,6 +111,7 @@ const handleImageChange =(e) =>{
         data.append("image_file", formData.image_file);
 
 
+
         const res = await fetch('/shelter_add_pet',{
 
             method: "POST",
@@ -111,15 +122,47 @@ const handleImageChange =(e) =>{
         if(!res.ok){
 
             console.log("an error occured with the response object");
-            return
+               setToast({type: "error",
+                    message: "An error occurred when trying to add the pet."
+                })
+            return     
         }
 
 
+         setToast({type: "success",
+                    message: "The pet was successfully added."
+                })
 
+                setFormData({
+ name: "",
+    type: "",
+    breed: "",
+    age: "",
+    city: "",
+    state: "",
+    status: "",
+    energy_level: "",
+    temperament: "",
+    attention_needs: "",
+    size: "",
+    good_with_kids: "",
+    good_with_pets: "",
+    training_status: "",
+    maintenance_level: "",
+    home_type: "",
+    description: "",
+    image_url: "",
+    created_at: "",
+    shelter_id: "",
+    shelter_name: "",
+    image_file: null
+    });
 
+    set_Image_Preview(null);
 
 
     }
+    
 
 
     
@@ -127,6 +170,11 @@ const handleImageChange =(e) =>{
     return(
 
         <div className="shelter-add-pets-main">
+
+            {toast &&(
+
+                <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
             <Sidebar></Sidebar>
 

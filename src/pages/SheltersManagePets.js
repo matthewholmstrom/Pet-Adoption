@@ -3,12 +3,15 @@ import { useState,useEffect } from "react";
 import { getUser } from "../components/Auth";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
+import Toast from "../components/Toast";
 
 
 
 export default function SheltersManagePets(){
 
     const [search_pet, setSearch_Pet] = useState("");
+
+    const [toast, setToast] = useState(null);
 
     const [pet_type, setPet_Type] = useState("All Types");
 
@@ -73,10 +76,15 @@ export default function SheltersManagePets(){
           if(!res.ok){
 
                 console.log("An error occured with the response object from delete shelter pets.");
+                
+                setToast({type: "error",
+                    message: "An error occurred when the deleting the pet."
+                })
                 return
             }
 
-            setPets(prev => prev.filter((pet) => pet.id !==id));
+            setPets(prev => prev.filter((pet) => pet.pet_id !==id));
+
 
     }
 
@@ -120,9 +128,15 @@ export default function SheltersManagePets(){
 
 
         <div className="shelters-manage-pets-main">
+
+            {toast && (
+
+                <Toast toast = {toast} closeToast = {() => setToast(null)}></Toast>
+            )
+        }
             <Sidebar></Sidebar>
 
-            <div className="shelters-manage-pets-right">''
+            <div className="shelters-manage-pets-right">
 
 
 

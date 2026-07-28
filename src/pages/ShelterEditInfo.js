@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { getUser } from "../components/Auth";
 import { Link } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
+import Toast from "../components/Toast";
 
 
 
@@ -15,6 +16,7 @@ export default function ShelterEditInfo (){
 
     const [imagePreview, setImagePreview] = useState(null);
 
+    const[toast, setToast] = useState(null);
     const [shelter_info, setShelter_Info] = useState({});
 
 
@@ -76,9 +78,20 @@ const res = await fetch('/edit_shelter_info', {
    if(!res.ok){
 
                 console.log("Error in the response object");
+                 setToast({type: "error",
+                    message: "Could not update the shelter's information."
+                });
+
                 return
             }
             const data = await res.json();
+
+               setToast({type: "success",
+                    message: "Shelter's information was successfully updated."
+                });
+
+
+            
             
 
     }
@@ -104,6 +117,14 @@ const res = await fetch('/edit_shelter_info', {
     return (
 
         <div className="set-shelter-info-main">
+
+            
+                        {toast && (
+            
+                            <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+                        )}
+            
+                    
 
 
 <Sidebar></Sidebar>

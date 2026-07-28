@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useParams } from "react-router-dom";
 import { getUser } from "../components/Auth";
+import Toast from "../components/Toast";
 
 
 
@@ -25,6 +26,7 @@ export default function NonPetMessageShelter() {
     const [role, set_role] = useState("")
     const [shelt_id, set_shelt_id] = useState(id);
     const [conv_id, set_conv_id] = useState("");
+    const [toast, setToast] = useState(null);
 
  
 
@@ -99,15 +101,17 @@ return
 
         if(!res1.ok || !data.conversation_id){
             console.log("error: res1 not okay or converstation_id is null");
-            return
 
+            return
         }
         const not_stale_conv_id = data.conversation_id;
 
         if(res1.ok){
 
             set_conv_id(data.conversation_id);
-        }
+            }
+
+        
 
 
 try{
@@ -124,7 +128,24 @@ try{
 
         });
 
+
         const data1 = await res2.json();
+
+        if(!res2.ok){
+
+
+            
+            setToast({type: "error",
+                message: "The message could not be sent."
+            });
+            return
+
+        }
+            setToast({type: "success",
+                message: "The message was sent successfully."})
+                setMessage("");
+                setReason("Select a Reason")
+
 
     }catch(err){
 
@@ -137,10 +158,14 @@ try{
 
 
 
-
     return(
 
 <div className="contact_shelter_main">
+
+   {toast && (
+
+        <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+    ) }
 
     <Sidebar></Sidebar>
 

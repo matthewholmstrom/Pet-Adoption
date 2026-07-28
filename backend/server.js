@@ -141,6 +141,8 @@ try{
 
 
 
+
+
 app.get('/shelters/:id', async (req, res) =>{
 
 try{
@@ -699,8 +701,13 @@ yard, hours_alone, other_pets, other_children
 if(result.affectedRows === 0){
 
     console.log("No rows were affected");
-    res.status(404).json({error: "Insert was unsuccessful in /adoption_requests"})
+    return res.status(404).json({error: "Insert was unsuccessful in /adoption_requests"})
 }
+
+return res.status(200).json({message: "Insert was successful in /adoption_requests"})
+
+
+
 })
 
 
@@ -1560,7 +1567,25 @@ limit 5;
 
 
 
-})
+});
+
+
+app.delete('/shelters_pet_delete/:id', async(req,res) =>{
+
+    const {id} = req.params;
+
+
+    const [result] = await db.query('delete from pets where id = ?', [id]);
+
+      if(result.affectedRows === 0){
+
+        console.log("Could not delete the pet");
+        return res.status(404).json({error: "Could not delete the pet."});
+    };
+
+    return res.status(200).json({message: "Deletion was successful"});
+
+});
 
 
 app.listen(port, () =>{

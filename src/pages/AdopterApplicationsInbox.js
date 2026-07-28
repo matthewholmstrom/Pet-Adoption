@@ -3,6 +3,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { getUser } from "../components/Auth";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 
 export default function AdopterApplicationsInbox (){
@@ -10,6 +11,8 @@ export default function AdopterApplicationsInbox (){
     const person = getUser();
 
     const user_id = person.userId;
+
+    const [toast, setToast] = useState(null);
 
     const [applications, setApplications] = useState([]);
 
@@ -80,6 +83,7 @@ export default function AdopterApplicationsInbox (){
 
     }, [user_id]);
 
+     
 
     const handleDelete = async (id) =>{
 
@@ -96,11 +100,21 @@ export default function AdopterApplicationsInbox (){
         if(!res.ok){
 
             console.log("Error in the response.");
+            setToast({type: "error",
+                                    message: "There was an error in deleting the application."
+            })
+        
             return
         }
 
         const data = await res.json();
+         setApplications((prev) => prev.filter(app => app.id !==id));
+
+        
+           
     }
+  
+
 
   const formatted_date = (date) =>{
 
@@ -156,6 +170,13 @@ export default function AdopterApplicationsInbox (){
     return(
 
         <div className="adopters-applications-main">
+
+
+            {toast &&(
+
+<Toast toast = {toast} closeToast={() => setToast(null)}></Toast>
+
+            )}
 
 <Sidebar></Sidebar>
 

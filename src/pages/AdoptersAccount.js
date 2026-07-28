@@ -5,6 +5,7 @@ import { getUser } from "../components/Auth";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { Logout } from "../components/Auth";
 import { useNavigate } from "react-router-dom";
+import Toast from "../components/Toast";
 
 
 export default function AdoptersAccount(){
@@ -19,6 +20,7 @@ export default function AdoptersAccount(){
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [old_password, setOld_Password] = useState("");
+    const [toast, setToast] = useState(null);
 
     const [showModal, setShowModal] = useState(false);
     
@@ -58,7 +60,18 @@ const data = await res.json();
 if(!res.ok){
 
     console.log("Error occured with the response object.")
+
+      setToast({type: "error",
+                                    message: "Account name could not be updated"
+            });
+            return
+
 }
+
+
+      setToast({type: "success",
+                                    message: "Account name was updated successfully."
+            });
   }
 
 
@@ -78,9 +91,22 @@ headers: {'Content-Type': 'application/json'},
 body: JSON.stringify({user_id: person_id,
 email: email
 
-})}
+})});
 
-    )
+
+if(!res.ok){
+
+
+     setToast({type: "error",
+                                    message: "Account email could not be updated"
+            });
+            return
+
+}
+
+     setToast({type: "success",
+                                    message: "Account email was updated successfully."
+            });
   };
            
 
@@ -126,7 +152,20 @@ email: email
     if(!res.ok){
 
     console.log("Error occured with the response object.")
+    
+     setToast({type: "error",
+                                    message: "Account password could not be updated"
+            });
+            return
 }
+
+
+ setToast({type: "success",
+                                    message: "Account password was updated successfully."
+            });
+            setOld_Password("");
+setNew_Password("");
+setConfirm_Password("");
 
 
   };
@@ -149,8 +188,18 @@ email: email
       if(!res.ok){
 
     console.log("Error occured with the response object.");
+
+     setToast({type: "error",
+                                    message: "Account could not be deleted"
+            });
     return 
 };
+
+
+ setToast({type: "success",
+                                    message: "Account was successfully deleted"
+            });
+
 
 
 Logout();
@@ -164,6 +213,11 @@ navigate('/');
     return(
 
         <div className="adopters-account-main">
+
+            {toast && (
+
+                <Toast toast = {toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
             <Sidebar></Sidebar>
 

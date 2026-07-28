@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
-
+import Toast from "../components/Toast";
 
 
 export default function SheltersEditPet(){
@@ -15,6 +15,7 @@ export default function SheltersEditPet(){
     const [pet_info,setPet_Info] = useState({});
 
     const [imagePreview, setImagePreview] = useState(null);
+    const [toast, setToast] = useState(null);
 
 
     const {pet_id} = useParams();
@@ -86,8 +87,19 @@ export default function SheltersEditPet(){
           if(!res.ok){
 
                 console.log("An error occured in the pet edit response");
+
+                   setToast({type: "error",
+                    message: "Could not edit the pet's profile."
+                })
                 return
             };
+
+            
+                   setToast({type: "success",
+                    message: "Pet's profile updated successfully."
+                });
+
+
 
     }
 
@@ -112,6 +124,12 @@ export default function SheltersEditPet(){
 
 
         <div className="shelters-edit-pet-main">
+
+
+            {toast && (
+
+                <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
             <Sidebar/>
 

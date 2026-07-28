@@ -3,6 +3,7 @@ import { getUser } from "../components/Auth";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 
 export default function MessageAboutPet (){
@@ -13,6 +14,7 @@ export default function MessageAboutPet (){
     const role = person.role;
 
     const [message, setMessage] = useState("");
+    const [toast, setToast] = useState(null);
 
     const [messageReason,setMessageReason] = useState("Adoption Inquiry");
 
@@ -83,8 +85,22 @@ export default function MessageAboutPet (){
           if(!res.ok){
 
                 console.log("error: in the response");
+
+                setToast({type: "error",
+                    message: "An error occurred when the sending the message."
+                })
                 return
+
             }
+
+            
+                setToast({type: "success",
+                    message: "The message was sent successfully."});
+
+                    setMessage("");
+                    setMessageReason("Adoption Inquiry")
+
+
 
     }
 
@@ -92,6 +108,11 @@ export default function MessageAboutPet (){
     return(
 
         <div className="message-about-pet-main">
+
+            {toast &&(
+
+                <Toast toast = {toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
             <Sidebar></Sidebar>
 

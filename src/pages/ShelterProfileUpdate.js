@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { Logout } from "../components/Auth";
 import { useNavigate } from "react-router-dom";
+import Toast from "../components/Toast";
 
 
 
@@ -20,6 +21,8 @@ export default function ShelterProfileUpdate (){
     const user_id = person.userId;
 
     const [shelter_info, setShelter_Info] = useState({});
+
+    const [toast, setToast] = useState(null);
 
     const [name, setName] = useState("");
 
@@ -62,8 +65,18 @@ export default function ShelterProfileUpdate (){
            if(!res.ok){
 
             console.log("An error occured with the response");
+            
+      setToast({type: "error",
+                                    message: "Account name could not be updated."
+            });
+
             return
-        }
+        };
+
+        
+      setToast({type: "success",
+                                    message: "Account name was updated successfully."
+            });
 
     }
 
@@ -99,8 +112,16 @@ export default function ShelterProfileUpdate (){
            if(!res.ok){
 
             console.log("An error occured with the response");
+
+             setToast({type: "error",
+                                    message: "Account email could not be updated."
+            });
             return
         }
+
+         setToast({type: "success",
+                                    message: "Account email was successfully updated."
+            });
         
     }
 
@@ -144,8 +165,23 @@ export default function ShelterProfileUpdate (){
            if(!res.ok){
 
             console.log("An error occured with the response");
+
+                setToast({type: "error",
+                                    message: "Account password could not be updated."
+            });
             return
+            
         }
+
+            setToast({type: "success",
+                                    message: "Account password was successfully updated."
+            });
+
+            setConfirmPassword("");
+            setNewPassword("");
+            setOldPassword("")
+
+    
         
     }
 
@@ -173,8 +209,16 @@ export default function ShelterProfileUpdate (){
            if(!res.ok){
 
             console.log("An error occured with the response");
+
+            setToast({type: "error",
+                                    message: "Account deletion was unsuccessful."
+            });
             return
         }
+
+
+
+    setDeleteModal(false);
 
         Logout();
         navigate('/');
@@ -191,6 +235,11 @@ export default function ShelterProfileUpdate (){
 
 
         <div className="shelter-user-update-main">
+
+            {toast && (
+
+                <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
         <Sidebar></Sidebar>
 

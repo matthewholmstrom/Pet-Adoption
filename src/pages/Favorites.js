@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getUser } from "../components/Auth";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
+import Toast from "../components/Toast";
 
 
 export default function Favorites (){
@@ -13,6 +14,7 @@ export default function Favorites (){
     const [searchName, setSearchName] = useState("");
     const [petType, setPetType] = useState("All Types");
     const [shelter, setShelter] = useState("All Shelters");
+    const [toast, setToast] = useState(null);
 
     const [filteredPets, setFilteredPets] = useState([]);
 
@@ -69,10 +71,13 @@ export default function Favorites (){
             if(!res.ok){
 
                 console.log("error: in the response from /get_favorites ");
+              
                 return
             }
 
             setFavorites(data);
+
+           
 
 
 
@@ -134,9 +139,15 @@ export default function Favorites (){
         
         if(!res.ok){
 
+              setToast({type: "error",
+                    message: "Could not delete the favorited pet."
+                })
             console.log("error in the response from delete favorite");
             return
         }
+
+
+         setFavorites((prev) => prev.filter((fav) => fav.favorite_id !==id))
 
         console.log(data);
 
@@ -151,6 +162,12 @@ export default function Favorites (){
 
 
         <div className="favorites-main-cont">
+
+            {toast && (
+
+
+<Toast toast = {toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
             <Sidebar></Sidebar>
 

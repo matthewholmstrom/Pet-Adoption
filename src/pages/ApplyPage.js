@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getUser } from "../components/Auth";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 
 
@@ -13,6 +14,7 @@ export default function ApplyPage(){
 
     });
 
+    const [toast, setToast] = useState(null);
 
     const person = getUser();
 
@@ -44,11 +46,14 @@ export default function ApplyPage(){
 
             if(!res.ok){
 
-                console.log("An error occured in the pet_info response");
                 return
             }
 
+            
+
             setPets(data);
+
+            
         };
 
         getPet();
@@ -62,6 +67,7 @@ export default function ApplyPage(){
     const handleSubmit = async (e) =>{
 
         e.preventDefault();
+            console.log("SUBMIT FIRED");
 
 
         const res = await fetch('/adoption_request',
@@ -85,9 +91,23 @@ export default function ApplyPage(){
 
         if(!res.ok){
 
-            console.log("error with the response object from adoption request");
-            return
+              setToast({
+                    type: "error",
+                    message: "There was an error submitting your application."
+                })
+                return
         }
+
+        console.log("setting success toast");
+
+        setFormData({why_adopt: "", home_type: "", pet_experience: "", activity_level: "", yard: "", hours_alone: "", other_pets: "", other_children: ""
+
+    })
+
+          setToast({
+                    type: "success",
+                    message: "The application was submitted successfully."
+                })
 
     }
 
@@ -100,6 +120,14 @@ export default function ApplyPage(){
 
 
         <div className="apply-page-main">
+
+
+{toast &&(
+
+    <Toast toast ={toast}
+    closeToast={() =>setToast(null)}/>
+)}
+
 
 <Sidebar></Sidebar>
 
