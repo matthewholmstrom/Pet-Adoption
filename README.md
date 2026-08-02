@@ -106,6 +106,7 @@ The application supports two user roles:
 - Express.js
 - MySQL
 - mysql2/promise
+- JWT (JSON Web Tokens) for authentication and authorization
 - bcrypt
 - dotenv
 - multer
