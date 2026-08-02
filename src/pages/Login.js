@@ -4,11 +4,13 @@ import { useState } from "react";
 import "../css/Login.css"
 import { useNavigate } from "react-router-dom";
 import { getUser } from "../components/Auth";
+import Toast from "../components/Toast";
 
 
 export default function Login(){
 
     const navigate = useNavigate();
+    const [toast, setToast ] = useState(null);
     
     const [formData, setFormData] = useState({
 email: "", password: ""
@@ -41,13 +43,21 @@ headers: {
 
  const data = await res.json();
 
- console.log(data);
+
+ if(!res.ok){
+
+    setToast({type : "error",
+        message: "Email or password were not recognized."
+    });
+    return
+ }
+
 
 
  if(res.ok){
 
-    const person = {name: data.name, role: data.role, userId: data.id};
-    localStorage.setItem("person", JSON.stringify(person));
+    const token = data.token;
+    localStorage.setItem("token", token);
 
 
     const person2 = getUser();
@@ -85,6 +95,12 @@ return(
         <div className="login-left">
 
             <div className="login-left-container">
+
+                {toast &&(
+
+                    <Toast toast={toast}
+                    closeToast={() => setToast(null)} ></Toast>
+                )}
 
             <FaPaw className="paw-icon"/>
 

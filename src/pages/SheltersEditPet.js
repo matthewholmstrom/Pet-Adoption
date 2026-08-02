@@ -17,6 +17,7 @@ export default function SheltersEditPet(){
     const [imagePreview, setImagePreview] = useState(null);
     const [toast, setToast] = useState(null);
 
+    const token = localStorage.getItem("token");
 
     const {pet_id} = useParams();
 
@@ -26,7 +27,10 @@ export default function SheltersEditPet(){
 
         const getPet = async () =>{
 
-        const res = await fetch(`/pet_info/${pet_id}`)
+        const res = await fetch(`/pet_info_for_shelter/${pet_id}`,
+
+            {headers: {"Authorization" : "Bearer " + token}}
+        )
 
 
         const data = await res.json();
@@ -78,6 +82,8 @@ export default function SheltersEditPet(){
 
 
             method: "PUT",
+
+            headers:{"Authorization" : "Bearer " + token},
         
             body: formData
         });

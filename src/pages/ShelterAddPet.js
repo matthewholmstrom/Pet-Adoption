@@ -10,8 +10,7 @@ import Toast from "../components/Toast";
 export default function ShelterAddPet (){
 
 
-    const person = getUser();
-    const user_id = person?.userId;
+    const token = localStorage.getItem("token");
     const [toast, setToast] = useState(null);
 
     const [formData, setFormData] = useState({
@@ -72,11 +71,6 @@ const handleImageChange =(e) =>{
         e.preventDefault()
 
 
-        if(!user_id){
-
-            console.log("No user id was detected.")
-            return
-        }
 
 
             if(formData.age && isNaN(Number(formData.age))){
@@ -90,7 +84,6 @@ const handleImageChange =(e) =>{
         const data = new FormData();
 
 
-        data.append("user_id", user_id);
         data.append("name", formData.name);
         data.append("type", formData.type);
         data.append("breed", formData.breed);
@@ -115,6 +108,8 @@ const handleImageChange =(e) =>{
         const res = await fetch('/shelter_add_pet',{
 
             method: "POST",
+
+            headers:{"Authorization": "Bearer " + token},
             body: data
         });
 

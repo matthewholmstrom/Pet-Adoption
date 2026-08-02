@@ -9,12 +9,7 @@ import Sidebar from "../components/Sidebar";
 export default function AdopterDashboard(){
 
 
-    const person = getUser();
-
-    const user_id = person?.userId;
-    const role = person?.role;
-
-    
+    const token = localStorage.getItem("token");
 
 
 const [dashboardInfo, setDashboardInfo] = useState({
@@ -33,12 +28,13 @@ const [dashboardInfo, setDashboardInfo] = useState({
 
         const getInfo = async () =>{
 
-            if(!person){
-                console.log("No user ID provided.")
-            }
 
 
-            const res = await fetch(`/adopter_dashboard_info/${user_id}`);
+
+            const res = await fetch(`/adopter_dashboard_info/`,
+
+                {headers: {"Authorization": "Bearer " +token}}
+            );
 
 
                if(!res.ok){
@@ -55,7 +51,7 @@ const [dashboardInfo, setDashboardInfo] = useState({
         };
 
         getInfo();
-    }, [user_id]);
+    }, []);
     
 
           

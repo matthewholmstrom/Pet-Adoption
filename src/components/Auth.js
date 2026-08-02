@@ -1,15 +1,21 @@
 import React from "react";
+import {jwtDecode} from "jwt-decode"
 
 
 export function getUser(){
 
-    const person = localStorage.getItem("person");
-    return person? JSON.parse(person): null;
+    const token = localStorage.getItem("token");
+
+    if(!token){
+
+        return null
+    }
+    return jwtDecode(token);
 }
 
 
 export function Logout(){
 
-    localStorage.removeItem("person");
+    localStorage.removeItem("token");
     return
 }

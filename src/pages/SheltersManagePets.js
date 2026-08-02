@@ -17,9 +17,7 @@ export default function SheltersManagePets(){
 
     const [pet_status, setPet_Status] = useState("All Statuses")
 
-    const person = getUser();
-
-    const user_id = person.userId;
+    const token = localStorage.getItem("token");
 
 
     const [pets, setPets] = useState([]);
@@ -34,7 +32,12 @@ export default function SheltersManagePets(){
         const getPets = async () => {
 
 
-            const res = await fetch(`/get_shelter_pets/${user_id}`);
+            const res = await fetch(`/get_shelter_pets/`,
+                {
+
+                    headers: {"Authorization": "Bearer " + token}
+                }
+            );
 
             if(!res.ok){
 
@@ -47,16 +50,13 @@ export default function SheltersManagePets(){
 
                 setPets(data);
 
-
-
-                
             }
 
 
         };
 
         getPets();
-    }, [user_id]);
+    }, []);
 
 
 
@@ -66,7 +66,9 @@ export default function SheltersManagePets(){
         const res = await fetch(`/shelters_pet_delete/${id}`,
 
             {
-                method: "DELETE"
+                method: "DELETE",
+
+                headers: {"Authorization": "Bearer " + token}
             }
         );
 

@@ -8,8 +8,8 @@ import { Link } from "react-router-dom";
 
 export default function ShelterApplicationsInbox(){
 
-    const person = getUser();
-    const person_id = person.userId;
+
+    const token = localStorage.getItem("token");
     const [applications, setApplications] = useState([]);
 
     const [search_application, set_Search_Application] = useState("");
@@ -23,7 +23,11 @@ export default function ShelterApplicationsInbox(){
 
         const getApplications = async () =>{
 
-            const res = await fetch(`/shelters_applications/${person_id}`);
+            const res = await fetch(`/shelters_applications/`,
+                {
+                    headers: {"Authorization" : "Bearer " + token}
+                }
+            );
 
 
              if(!res.ok){
@@ -40,7 +44,7 @@ export default function ShelterApplicationsInbox(){
         };
 
         getApplications();
-    }, [person_id]);
+    }, []);
 
 
 

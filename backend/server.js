@@ -4,6 +4,8 @@ import multer from "multer";
 import path from "path";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv"
+import jwt from "jsonwebtoken"
+import { json } from "stream/consumers";
 
 dotenv.config();
 
@@ -32,6 +34,78 @@ const storage = multer.diskStorage({
 
 
 const upload = multer({storage});
+
+
+
+
+
+function authenticateToken(req, res, next){
+
+
+    const authHeader = req.headers["authorization"];
+
+    const token = authHeader &&
+    authHeader.split(" ")[1];
+
+    if(!token){
+
+        return res.status(401).json({message: "No token"})
+    };
+
+
+    jwt.verify(token,
+        process.env.JWT_Secret,
+
+        (err,user) =>{
+
+            if(err){
+
+                return res.status(403).json({message: "Invalid token"})
+            };
+
+            req.user = user;
+
+            console.log("passed authenication check")
+
+            next();
+        }
+    )
+}
+
+
+
+function checkShelter(req, res, next){
+
+
+    if(req.user.role !== "shelter"){
+
+                    console.log("user is not a shelter.")
+
+
+        return res.status(403).json({message: "Forbidden"})
+    }
+
+                console.log("passed shelter check")
+
+
+    next();
+
+
+};
+
+
+function checkAdopter(req, res, next){
+
+
+    if(req.user.role !== "adopter"){
+
+        return res.status(403).json({message: "Forbidden"})
+    };
+
+    next();
+}
+
+
 
 
 app.get('/pets', async (req, res) =>{
@@ -65,7 +139,11 @@ app.get('/pets', async (req, res) =>{
 })
 
 
-app.put('/pets', upload.single("image_file"), async (req,res) =>{
+app.put('/pets',
+    authenticateToken,
+    checkShelter, upload.single("image_file"), async (req,res) =>{
+
+        const user_id = req.user.id;
 
 
     const image_url = req.file? `/images/${req.file.filename}`:null;
@@ -76,16 +154,18 @@ app.put('/pets', upload.single("image_file"), async (req,res) =>{
 
 
 const sql = `
-UPDATE pets SET name = ?, type = ?, breed = ?, age = ?,
-    energy_level = ?, temperament = ?, attention_needs = ?, size = ?,
-    good_with_kids = ?,
-    good_with_pets = ?,
-    training_status = ?,
-    maintenance_level = ?,
-    home_type = ?,
-    description = ?,
-    image_url = COALESCE(?, image_url)
-WHERE id = ?
+UPDATE pets p
+inner join shelters s on
+s.id = p.shelter_id SET p.name = ?, p.type = ?, p.breed = ?, p.age = ?,
+    p.energy_level = ?, p.temperament = ?, p.attention_needs = ?, p.size = ?,
+    p.good_with_kids = ?,
+    p.good_with_pets = ?,
+    p.training_status = ?,
+    p.maintenance_level = ?,
+    p.home_type = ?,
+    p.description = ?,
+    p.image_url = COALESCE(?, p.image_url)
+WHERE p.id = ? and s.user_id = ?
 `;
 
 
@@ -95,7 +175,7 @@ const [result] = await db.query(sql, [
     energy_level, temperament, attention_needs, size,
     good_with_kids, good_with_pets, training_status,
 
-    maintenance_level, home_type, description, image_url, id
+    maintenance_level, home_type, description, image_url, id, user_id
 ]);
 
 
@@ -137,8 +217,43 @@ try{
     return res.status(400).json({error: "There was an error on the backend."})
 }
 
-})
+});
 
+
+
+
+
+app.get('/pet_info_for_shelter/:id',
+    authenticateToken,
+    checkShelter, async (req, res) =>{
+
+
+try{
+
+    
+    const {id} = req.params;
+
+    const user_id = req.user.id;
+
+    const sql = 'select p.*, s.name as shelter_name, s.image_url as shelter_image_url from pets p inner join shelters s on s.id = p.shelter_id where p.id=? and s.user_id = ?'
+
+    const [rows] = await db.query(sql, [id, user_id]);
+
+    if(rows.length === 0){
+
+        return res.status(400).json("Message: No matches were found in the database")
+
+    }
+
+    return res.status(200).json(
+
+    rows[0])
+}catch(err){
+
+    return res.status(400).json({error: "There was an error on the backend."})
+}
+
+});
 
 
 
@@ -177,12 +292,20 @@ if(rows.length===0){
 
 
 
-app.post('/shelter_add_pet', upload.single("image_file"), async (req,res) =>{
+app.post('/shelter_add_pet',
+    authenticateToken,
+    checkShelter, upload.single("image_file"), async (req,res) =>{
 
- const { user_id, name, type, breed, age, city, state,
+              console.log("Reached route");
+
+
+ const { name, type, breed, age, city, state,
     status, energy_level, temperament, attention_needs,
     size, good_with_kids, good_with_pets, training_status,
     maintenance_level, home_type, description } = req.body;
+
+
+    const user_id = req.user.id;
 
     let image_url = null;
 
@@ -243,10 +366,20 @@ app.post('/signup', async (req, res) =>{
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await db.query('insert into users (name, email, password, role) values (?,?,?,?)', [fullname, email, hashedPassword, role])
+    const [result] = await db.query('insert into users (name, email, password, role) values (?,?,?,?)', [fullname, email, hashedPassword, role]);
+
+    const token = jwt.sign({
+
+        id: result.insertId,
+        name: fullname,
+        role:role
+    }, process.env.JWT_Secret,
+    {expiresIn: "1h"}
+
+)
     
         return res.status(201).json({message: "sucessfully added user",
-            id: result.insertId
+            token: token
         })
 
     }catch(err){
@@ -254,7 +387,9 @@ app.post('/signup', async (req, res) =>{
         return res.status(400).json({error: err.message})
     }
     
-})
+});
+
+
 
 
 
@@ -275,10 +410,25 @@ app.post('/signup_shelter_plus_user', async (req,res) =>{
         console.log("no rows were inserted in shelter signup");
         return res.status(400).json({error: "no results were inserted"})
     }
+
+
+
+    const token = jwt.sign({
+
+        id: result.insertId,
+        name: fullname,
+        role: role
+
+
+    }, process.env.JWT_Secret,
+    {expiresIn: "1h"}
+);
+
+
     
     return res.status(200).json({message: "successfully added user",
 
-        id: result.insertId
+        token: token
     })
 });
 
@@ -314,10 +464,18 @@ app.post('/login', async (req, res) =>{
     }
 
 
-        return res.status(200).json({
-            id: rows[0].id,
+    const token = jwt.sign({
+          id: rows[0].id,
             name: rows[0].name,
             role: rows[0].role
+    },
+process.env.JWT_Secret,
+{expiresIn: "1h"});
+
+
+        return res.status(200).json({
+            message: "success",
+            token:token
         });
 
     }catch(err){
@@ -327,6 +485,8 @@ app.post('/login', async (req, res) =>{
 
 
 });
+
+
 
 
 
@@ -397,9 +557,16 @@ app.get('/get_shelters', async(req, res) =>{
 
 
 
-app.put('/complete_shelter_profile/', upload.single("image_file"), async (req,res) =>{
+app.put('/complete_shelter_profile/',
+    authenticateToken,
+    
+    checkShelter,
+    upload.single("image_file"), async (req,res) =>{
 
-  const { user_id, name, address, city, state, zip,
+
+        const user_id = req.user.id;
+
+  const { name, address, city, state, zip,
         about, phone, website, mission, hours } = req.body;
 
 
@@ -494,11 +661,15 @@ app.get('/user_info', async (req, res) =>{
 })
 
 
-app.post('/conversations_start', async (req,res) =>{
+app.post('/conversations_start',
+    authenticateToken,
+    checkAdopter, async (req,res) =>{
 
     console.log(req.body);
 
-    const {user_id, shelter_id} = req.body; 
+    const user_id = req.user.id;
+
+    const { shelter_id} = req.body; 
 
     if(!user_id || !shelter_id){
 
@@ -535,11 +706,16 @@ app.post('/conversations_start', async (req,res) =>{
 
 
 
-app.post('/messages_contact', async(req, res) =>{
+app.post('/messages_contact',
+    authenticateToken,
+    checkShelter, async(req, res) =>{
 
     console.log(req.body);
 
-    const {sender_type, message_text, conversation_id, sender_id} = req.body;
+    const sender_id = req.user.id;
+    const sender_type = req.user.role;
+
+    const { message_text, conversation_id} = req.body;
 
 
     console.log("Message Payload:", { sender_id,
@@ -564,7 +740,49 @@ app.post('/messages_contact', async(req, res) =>{
 
 
 }
-)
+);
+
+
+
+
+
+
+
+app.post('/messages_contact_adopter',
+    authenticateToken,
+    checkAdopter, async(req, res) =>{
+
+    console.log(req.body);
+
+    const sender_id = req.user.id;
+    const sender_type = req.user.role;
+
+    const { message_text, conversation_id} = req.body;
+
+
+    console.log("Message Payload:", { sender_id,
+                sender_type,
+                message_text,
+                conversation_id
+
+            })
+
+
+    const [result] = await db.query('insert into messages (sender_type, message_text, conversation_id, sender_id) values (?,?,?, ?)', [sender_type, message_text, conversation_id, sender_id]);
+    console.log('insert ok: ', result)
+
+    if(result.affectedRows ===0){
+
+        return res.status(400).json({error: "Unable to add message."})
+    }
+
+    return res.status(200).json({
+        message_id : result.insertId
+    })
+
+
+}
+);
 
 
 
@@ -578,9 +796,13 @@ app.get("/debug-db", async (req, res) => {
 
 
 
-app.get('/check_favorite', async (req, res) =>{
+app.get('/check_favorite',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
-    const {user_id, pet_id} = req.query;
+    const {pet_id} = req.query;
+
+    const user_id = req.user.id;
 
 
     const [rows] = await db.query('select * from favorites where user_id =? and pet_id = ?', [user_id, pet_id]);
@@ -597,9 +819,13 @@ app.get('/check_favorite', async (req, res) =>{
 })
 
 
-app.post('/favorites', async (req, res) =>{
+app.post('/favorites',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
-    const {user_id, pet_id} = req.body;
+    const { pet_id} = req.body;
+
+    const user_id = req.user.id;
 
     const [result] = await db.query('insert into favorites (user_id, pet_id) values (?,?)', [user_id, pet_id]);
 
@@ -615,7 +841,10 @@ app.post('/favorites', async (req, res) =>{
 
 
 
-app.delete('/favorites/:id', async (req, res) =>{
+app.delete('/favorites/:id', authenticateToken,
+    checkAdopter, async (req, res) =>{
+
+    const user_id = req.user.id;
 
 
     const {id} = req.params;
@@ -625,7 +854,7 @@ app.delete('/favorites/:id', async (req, res) =>{
        return res.status(400).json({error: "no id was sent to the delete favorites route."})
     }
 
-    const [result] = await db.query('delete from favorites where id = ?', [id]);
+    const [result] = await db.query('delete from favorites f where f.id = ? and f.user_id =?', [id, user_id]);
 
     if(result.affectedRows === 0){
 
@@ -640,14 +869,12 @@ app.delete('/favorites/:id', async (req, res) =>{
 
 
 
-app.get('/users_favorites/:user_id', async (req, res) =>{
+app.get('/users_favorites/',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
-const {user_id} = req.params;
+const user_id = req.user.id
 
-if(!user_id){
-
-    return res.status(400).json({error: "user id not passed to users favorites route."})
-}
 
 const sql = `select f.id as favorite_id, f.pet_id as pet_id, p.name as pet_name, p.image_url as pet_image, p.type as pet_type, p.breed as pet_breed, p.age as pet_age, s.name as shelter_name
 from favorites f inner join pets p on f.pet_id = p.id
@@ -666,14 +893,19 @@ return res.status(200).json([]);
 
 return res.status(200).json(rows);
 
-})
+});
 
 
 
-app.post('/adoption_request', async (req, res) =>{
+app.post('/adoption_request',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
 
-    const {user_id, pet_id, why_adopt, home_type, pet_experience, activity_level, yard, hours_alone, other_pets, other_children} = req.body;
+        const user_id = req.user.id;
+
+
+    const { pet_id, why_adopt, home_type, pet_experience, activity_level, yard, hours_alone, other_pets, other_children} = req.body;
 
     const [result] =  await db.query(
 `
@@ -712,9 +944,11 @@ return res.status(200).json({message: "Insert was successful in /adoption_reques
 
 
 
-app.get('/user_applications/:id', async (req, res) =>{
+app.get('/user_applications/', 
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
-   const {id} = req.params;
+   const id = req.user.id;
 
    const sql = `select applications.*, p.name as pet_name, p.type as pet_type, s.name as shelter_name, p.image_url as pet_image from applications
    inner join pets p on p.id = applications.pet_id 
@@ -736,9 +970,13 @@ app.get('/user_applications/:id', async (req, res) =>{
 
 
 
-app.delete('/user_applications/:id', async (req, res) =>{
+app.delete('/user_applications/:id',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
 
+
+    const user_id = req.user.id;
     const {id} = req.params;
     console.log(id);
 
@@ -748,7 +986,7 @@ app.delete('/user_applications/:id', async (req, res) =>{
         })
     }
 
-    const  [result] = await db.query('delete from applications where id = ?', [id]);
+    const  [result] = await db.query(`delete from applications where applications.id = ? and applications.user_id =?`, [id, user_id]);
 
     console.log("result is: ", result);
 
@@ -765,13 +1003,15 @@ app.delete('/user_applications/:id', async (req, res) =>{
 
 
 
-app.get('/conversations/:id', async(req, res) =>{
+app.get('/conversations/',
+    authenticateToken,
+    checkAdopter, async(req, res) =>{
 
 
 
     try{
 
-    const {id} = req.params;
+    const id = req.user.id;
 
     if(!id){
 
@@ -805,7 +1045,11 @@ app.get('/conversations/:id', async(req, res) =>{
 
 
 
-app.get('/messages/:id', async( req, res) =>{
+app.get('/messages/:id',
+    authenticateToken,
+    checkAdopter, async( req, res) =>{
+
+        const user_id = req.user.id;
 
 
     const {id} = req.params;
@@ -815,29 +1059,34 @@ app.get('/messages/:id', async( req, res) =>{
     };
 
 
-    const sql = `select * from messages where conversation_id = ?`
+    const sql = `select m.* from messages m inner join conversations c on c.id = m.conversation_id where m.conversation_id = ? and c.user_id = ?`
 
-    const [rows] = await db.query(sql, [id]);
+    const [rows] = await db.query(sql, [id, user_id]);
 
     if(rows.length ===0){
 
         console.log("No rows were returned from the messages table");
-        res.status(200).json([]);
+        return res.status(200).json([]);
     }
 
-    res.status(200).json(rows);
+    return res.status(200).json(rows);
 
 
 });
 
 
 
-app.post('/messages', async (req, res) =>{
+app.post('/messages',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
 
     console.log(req.body);
 
-    const {sender_id, conversation_id, message_text, sender_type} = req.body;
+    const sender_id = req.user.id;
+    const sender_type = req.user.role;
+
+    const { conversation_id, message_text} = req.body;
 
     if(!sender_id||!conversation_id||!message_text||!sender_type){
 
@@ -860,9 +1109,13 @@ app.post('/messages', async (req, res) =>{
 });
 
 
-app.put('/adopters_account_name', async (req,res) =>{
+app.put('/adopters_account_name',
+    authenticateToken,
+    checkAdopter, async (req,res) =>{
 
-    const {user_id,name} = req.body;
+
+    const user_id = req.user.id;
+    const {name} = req.body;
     console.log(req.body);
 
     const [result] = await db.query('update users set name = ? where id = ?', [name, user_id]);
@@ -880,10 +1133,14 @@ app.put('/adopters_account_name', async (req,res) =>{
 
 
 
-app.put('/adopters_account_email', async (req, res) =>{
+app.put('/adopters_account_email',
+    authenticateToken, 
+    checkAdopter, async (req, res) =>{
 
 
-    const {user_id, email} = req.body;
+    const user_id = req.user.id;
+
+    const { email} = req.body;
 
     const [result] = await db.query('update users set email = ? where id =?', [email, user_id]);
 
@@ -899,20 +1156,35 @@ app.put('/adopters_account_email', async (req, res) =>{
 
 
 
-app.put(`/adopters_account_password`, async (req, res) =>{
+app.put(`/adopters_account_password`,
+    authenticateToken, checkAdopter, async (req, res) =>{
 
 
-    const {new_password, confirm_password, user_id, old_password} = req.body;
+        const user_id = req.user.id;
+
+    const {new_password, confirm_password, old_password} = req.body;
 
 
-    const [rows] = await db.query('select * from users where password = ? and id = ?', [old_password, user_id]);
+    const [user_password] = await db.query('select * from users where id = ?', [user_id]);
 
-    if(rows.length ===0){
+    if(user_password.length ===0){
 
-       return  res.status(404).json({error: "The current password is incorrect."})
+        return res.status(400).json({error: "no user match."});
     }
 
-    const [result] = await db.query('update users set password = ? where id = ?', [new_password, user_id]);
+    const password_check = await bcrypt.compare( old_password, user_password[0].password);
+
+    if(!password_check){
+  return res.status(400).json({error: "invalid password"});
+
+    }
+
+
+    const hashedPassword = await bcrypt.hash(new_password,10);
+    
+
+
+    const [result] = await db.query('update users set password = ? where id = ?', [hashedPassword, user_id]);
 
      if(result.affectedRows === 0){
 
@@ -927,10 +1199,25 @@ app.put(`/adopters_account_password`, async (req, res) =>{
 
 
 
-app.delete('/adopters_account_delete/:id', async(req, res) =>{
+app.delete('/adopters_account_delete/',
+    authenticateToken,
+    checkAdopter, async(req, res) =>{
 
 
-    const {id} = req.params;
+    const id = req.user.id;
+
+
+    await db.query('delete from applications where user_id = ?', [id]);
+
+
+    await db.query(`delete from messages where conversation_id in (
+        select id from conversations where user_id = ?)`, [id]);
+
+
+            await db.query('delete from conversations where user_id = ?', [id]);
+
+            await db.query('delete from favorites where user_id = ?', [id]);
+
 
     const [result] = await db.query('delete from users where id = ?', [id]);
 
@@ -948,9 +1235,11 @@ app.delete('/adopters_account_delete/:id', async(req, res) =>{
 
 
 
-app.get(`/get_shelter_pets/:id`, async (req, res) =>{
+app.get(`/get_shelter_pets/`,
+    authenticateToken,
+    checkShelter, async (req, res) =>{
 
-    const {id} = req.params;
+    const id = req.user.id;
 
     const sql = `select p.image_url as pet_image, p.id as pet_id, p.name, p.breed, p.type, p.age,
 
@@ -991,10 +1280,12 @@ app.get(`/get_shelter_pets/:id`, async (req, res) =>{
 
 
 
-app.get('/shelters_applications/:id', async (req, res) =>{
+app.get('/shelters_applications/',
+    authenticateToken,
+    checkShelter, async (req, res) =>{
 
 
-    const {id} = req.params;
+    const id = req.user.id;
 
     const sql = `select a.*, p.name as pet_name, p.image_url as pet_image, applyers.name as applicant_name, p.type as pet_type,
     a.status as application_status
@@ -1021,15 +1312,21 @@ console.log(rows)
 
 
 
-app.get('/get_application_details/:id', async(req,res) =>{
+app.get('/get_application_details/:id',
+    authenticateToken,
+    checkShelter, async(req,res) =>{
+
+
+        const user_id = req.user.id;
 
 
     const {id} = req.params;
 
     const sql = `select a.*, p.image_url as pet_image, p.name as pet_name, p.type as pet_type, p.breed as pet_breed, p.size as pet_size,
-    applicant.name as applicant_name from applications a inner join pets p on a.pet_id = p.id inner join users applicant on applicant.id = a.user_id where a.id = ?;`
+    applicant.name as applicant_name from applications a inner join pets p on a.pet_id = p.id inner join users applicant on applicant.id = a.user_id
+    inner join shelters s on s.id = p.shelter_id where a.id = ? and s.user_id = ?;`
 
-    const [rows] = await db.query(sql, [id]);
+    const [rows] = await db.query(sql, [id, user_id]);
 
     console.log(rows)
     if(rows.length ===0){
@@ -1044,13 +1341,17 @@ app.get('/get_application_details/:id', async(req,res) =>{
 });
 
 
-app.put('/applications_status', async (req,res) =>{
+app.put('/applications_status',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
+
+        const user_id = req.user.id;
 
     const {app_id, status} = req.body;
 
-    const sql = `update applications set status = ? where id = ?`
+    const sql = `update applications a inner join pets p on p.id = a.pet_id inner join shelters s on s.id = p.shelter_id set a.status = ? where a.id = ? and s.user_id = ?`
 
-    const [result] = await db.query(sql, [status, app_id]);
+    const [result] = await db.query(sql, [status, app_id, user_id]);
 
         if(result.affectedRows === 0){
 
@@ -1065,10 +1366,12 @@ app.put('/applications_status', async (req,res) =>{
 
 
 
-app.get('/shelters_side_conversations/:user_id', async (req,res) =>{
+app.get('/shelters_side_conversations/',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
 
 
-    const {user_id} = req.params;
+    const user_id = req.user.id;
 
     const [rows] = await db.query('select id from shelters where user_id = ?', [user_id]);
 
@@ -1092,17 +1395,20 @@ const [rows2] = await db.query(sql, [shelt_id]);
 
  if(rows2.length === 0){
 
-        console.log("Could not get conversations");
-        return res.status(404).json({error: "Could not get conversations"});
+        return res.status(200).json([]);
+
+
     };
 
      return res.status(200).json(rows2);
 
 
-})
+});
 
 
-app.get('/get_shelters_messages/:conv_id', async (req, res) =>{
+app.get('/get_shelters_messages/:conv_id',
+    authenticateToken,
+    checkShelter, async (req, res) =>{
 
     const {conv_id} = req.params;
 
@@ -1123,12 +1429,16 @@ app.get('/get_shelters_messages/:conv_id', async (req, res) =>{
 })
 
 
-app.get('/shelter_info/:id', async (req,res) =>{
+app.get('/shelter_info/',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
+
+        const user_id = req.user.id;
 
 
-    const {id} = req.params;
+    const sql = `select * from shelters s where s.user_id = ?`
 
-    const [rows] = await db.query('select * from shelters where user_id = ?', [id]);
+    const [rows] = await db.query(sql, [user_id]);
 
 
     if(rows.length === 0){
@@ -1142,12 +1452,16 @@ app.get('/shelter_info/:id', async (req,res) =>{
 
 
 
-app.put('/edit_shelter_info', upload.single("image_file"), async (req, res) =>{
+app.put('/edit_shelter_info',
+    authenticateToken,
+    checkShelter, upload.single("image_file"), async (req, res) =>{
 
 
     const image_url = req.file? `/images/${req.file.filename}`:null;
 
-    const { name, address, city, state, zip, about, phone, website, mission, hours, user_id } = req.body;
+    const user_id = req.user.id;
+
+    const { name, address, city, state, zip, about, phone, website, mission, hours } = req.body;
 
 
     const [result] = await db.query(
@@ -1173,10 +1487,14 @@ app.put('/edit_shelter_info', upload.single("image_file"), async (req, res) =>{
 
 
 
-app.put('/shelter_user_name/', async (req,res) =>{
+app.put('/shelter_user_name/',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
 
 
-    const {name, user_id} = req.body;
+    const user_id = req.user.id;
+
+    const {name} = req.body;
 
     const [result] = await db.query('update users set name = ? where id = ?', [name, user_id]);
 
@@ -1196,10 +1514,13 @@ app.put('/shelter_user_name/', async (req,res) =>{
 
 
 
-app.put('/shelter_user_email/', async (req,res) =>{
+app.put('/shelter_user_email/',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
 
+    const user_id = req.user.id
 
-    const {email, user_id} = req.body;
+    const {email} = req.body;
 
     const [result] = await db.query('update users set email = ? where id = ?', [email, user_id]);
 
@@ -1219,28 +1540,44 @@ app.put('/shelter_user_email/', async (req,res) =>{
 
 
 
-app.put('/shelter_user_password/', async (req,res) =>{
 
 
-    const {oldPassword,newPassword, user_id} = req.body;
+app.put('/shelter_user_password/',
+    authenticateToken,
+    checkShelter, async (req,res) =>{
+
+
+    const user_id = req.user.id;
+
+    const [user_rows] = await db.query('select * from users where id = ?', [user_id]
+
+    );
+
+    if(user_rows.length ===0 ){
+
+       return res.status(400).json({error: "No user id was detected."})
+    };
+
+    
+
+
+    const {oldPassword,newPassword} = req.body;
+
+    const passwordMatch = await bcrypt.compare(oldPassword, user_rows[0].password);
 
 
 
-    const [rows] = await db.query('select * from users where password = ? and id = ?', [oldPassword, user_id]);
-
-
-     if(rows.length === 0){
+     if(!passwordMatch){
 
         console.log("Passowrd is incorrect");
         return res.status(404).json({error: "Current Password is incorrect"});
     };
 
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
 
 
-
-
-    const [result] = await db.query('update users set password = ? where id = ?', [newPassword, user_id]);
+    const [result] = await db.query('update users set password = ? where id = ?', [hashedPassword, user_id]);
 
     
 
@@ -1257,11 +1594,49 @@ app.put('/shelter_user_password/', async (req,res) =>{
 
 
 
-app.delete('/shelter_user_delete/', async (req, res) =>{
+app.delete('/shelter_user_delete/',
+    authenticateToken,
+    checkShelter, async (req, res) =>{
 
 
-    const {user_id} = req.body;
+    const user_id = req.user.id;
+
+
+    await db.query(`delete from messages where conversation_id in (
+        
+        select id from conversations where shelter_id in(
+        
+        select id from shelters s where s.user_id = ?))`, [user_id]);
+
+
+             await db.query(`delete c from conversations c inner join shelters s on s.id = c.shelter_id where s.user_id = ?`,
+            [user_id]
+        )
+
+
+       
+
+              await db.query(`delete a from applications a inner join pets p on p.id = a.pet_id inner join
+                shelters s on s.id = p.shelter_id inner join users u on u.id = s.user_id where s.user_id = ?`, [user_id]);
+
+
+                            await db.query(`delete f from favorites f inner join pets p on p.id = f.pet_id
+                                inner join shelters s on s.id = p.shelter_id where s.user_id = ?`, [user_id]);
+
+                            
+                            await db.query(`delete p from pets p inner join shelters s on s.id = p.shelter_id where s.user_id = ?`, [user_id]);
+
+                        
+
+
+        await db.query(`delete from shelters where user_id = ?`, [user_id]);
+
+    
+
     const [result] = await db.query('delete from users where id = ?', [user_id]);
+
+
+    
 
 
     if(result.affectedRows === 0){
@@ -1271,8 +1646,7 @@ app.delete('/shelter_user_delete/', async (req, res) =>{
     };
 
     return res.status(200).json({message: "Deletion was successful"});
-})
-
+});
 
 
 
@@ -1304,12 +1678,17 @@ app.get('/shelter_from_pet/:pet_id', async (req,res)=>{
 
 
 
-app.post('/message_about_pet', async (req, res) =>{
+app.post('/message_about_pet',
+    authenticateToken,
+    checkAdopter, async (req, res) =>{
 
 
     let conv_id = null;
 
-    const {user_id, shelter_id, pet_id, reason, message_text, role} = req.body;
+    const user_id = req.user.id;
+    const role = req.user.role;
+
+    const { shelter_id, pet_id, reason, message_text} = req.body;
 
 
     const [rows] = await db.query('select * from conversations where user_id =? and shelter_id =? and pet_id = ?', [user_id, shelter_id, pet_id]);
@@ -1340,10 +1719,12 @@ app.post('/message_about_pet', async (req, res) =>{
 
 
 
-app.get('/shelter-dashboard/:user_id', async (req, res) =>{
+app.get('/shelter-dashboard/',
+    authenticateToken,
+    checkShelter, async (req, res) =>{
 
 
-    const {user_id} = req.params;
+    const user_id = req.user.id;
 
     let shelt_id = null;
 
@@ -1469,11 +1850,12 @@ res.json({total_pets: rows2[0].total_pets,
 
 
 
-app.get('/adopter_dashboard_info/:user_id', async (req,res) =>{
+app.get('/adopter_dashboard_info/',
+    authenticateToken,
+    checkAdopter, async (req,res) =>{
 
 
-    const {user_id} = req.params;
-    console.log(user_id);
+    const user_id = req.user.id;
 
     const sql1 = `select count(*) as favorite_count from favorites f
     inner join users u on u.id = f.user_id
@@ -1570,12 +1952,19 @@ limit 5;
 });
 
 
-app.delete('/shelters_pet_delete/:id', async(req,res) =>{
+app.delete('/shelters_pet_delete/:id',
+    authenticateToken,
+    checkShelter, async(req,res) =>{
+
+
+        const user_id = req.user.id;
 
     const {id} = req.params;
 
 
-    const [result] = await db.query('delete from pets where id = ?', [id]);
+
+    const [result] = await db.query(`delete p from pets p inner join shelters s
+        on p.shelter_id = s.id where p.id = ? and s.user_id = ?`, [id, user_id]);
 
       if(result.affectedRows === 0){
 

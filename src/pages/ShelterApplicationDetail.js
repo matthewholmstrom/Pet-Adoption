@@ -9,6 +9,7 @@ import { MdArrowBack } from "react-icons/md";
 export default function ShelterApplicationDetails (){
 
     const {app_id} = useParams();
+    const token = localStorage.getItem("token");
 
 
     const [application, setApplication] = useState({});
@@ -22,7 +23,11 @@ export default function ShelterApplicationDetails (){
         const getApplication = async () =>{
 
 
-            const res = await fetch(`/get_application_details/${app_id}`);
+            const res = await fetch(`/get_application_details/${app_id}`,{
+                        headers: {"Authorization": "Bearer " + token}}
+
+
+            );
 
                 if(!res.ok){
 
@@ -70,7 +75,11 @@ if(data.status === "approved"){
 
             method: "PUT",
 
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+                "Authorization": "Bearer " + token,
+
+
+            },
             body: JSON.stringify({app_id : app_id,
                 status: status
             })

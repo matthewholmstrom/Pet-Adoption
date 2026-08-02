@@ -15,10 +15,8 @@ export default function ShelterProfileUpdate (){
 
     const navigate = useNavigate();
 
-    const person = getUser();
-
-    const role = person.role;
-    const user_id = person.userId;
+    const token = localStorage.getItem("token");
+;
 
     const [shelter_info, setShelter_Info] = useState({});
 
@@ -50,12 +48,13 @@ export default function ShelterProfileUpdate (){
         const res = await fetch('/shelter_user_name/',{
 
             method: "PUT",
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+                "Authorization": "Bearer " + token
+            },
 
             body: JSON.stringify({
 
-                name:name,
-                user_id: user_id
+                name:name
             })
 
         }
@@ -97,12 +96,13 @@ export default function ShelterProfileUpdate (){
         const res = await fetch('/shelter_user_email/',{
 
             method: "PUT",
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+                "Authorization" : "Bearer " + token
+            },
 
             body: JSON.stringify({
 
-                email:email,
-                user_id: user_id
+                email:email
             })
 
         }
@@ -149,13 +149,14 @@ export default function ShelterProfileUpdate (){
         const res = await fetch('/shelter_user_password/',{
 
             method: "PUT",
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+                "Authorization": "Bearer " + token
+            },
 
             body: JSON.stringify({
 
                 oldPassword:oldPassword,
                 newPassword:newPassword,
-                user_id: user_id
             })
 
         }
@@ -195,12 +196,9 @@ export default function ShelterProfileUpdate (){
         const res = await fetch('/shelter_user_delete/',{
 
             method: "DELETE",
-            headers: {'Content-Type': 'application/json'},
-
-            body: JSON.stringify({
-
-                user_id: user_id
-            })
+            headers: {'Content-Type': 'application/json',
+                "Authorization" : "Bearer " + token
+            }
 
         }
             

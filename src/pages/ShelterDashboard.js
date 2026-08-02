@@ -64,17 +64,8 @@ const appData = [
     }
 ]
 
+    const token = localStorage.getItem("token");
 
-
-
-
-
-
-
-
-    const person = getUser();
-
-    const user_id = person.userId;
 
 
     useEffect(() =>{
@@ -82,7 +73,14 @@ const appData = [
 
         const getShelterInfo = async () =>{
 
-        const res = await fetch(`/shelter-dashboard/${user_id}`);
+        const res = await fetch(`/shelter-dashboard/`, {
+
+            headers: {"Authorization": "Bearer " + token}
+        }
+
+
+            
+        );
 
         if(!res.ok){
 
@@ -101,7 +99,7 @@ const appData = [
 
         getShelterInfo();
 
-    }, [user_id]);
+    }, []);
 
 
     return(

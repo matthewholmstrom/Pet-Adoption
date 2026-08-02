@@ -10,7 +10,7 @@ export default function ShelterInfo(){
 
     const person = getUser();
 
-    const user_id = person?.userId;
+    const user_id = person?.id;
     const user_role = person?.role;
 
 

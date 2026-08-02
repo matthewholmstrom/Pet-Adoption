@@ -28,51 +28,14 @@ export default function NonPetMessageShelter() {
     const [conv_id, set_conv_id] = useState("");
     const [toast, setToast] = useState(null);
 
+
+    const token = localStorage.getItem("token")
  
-
-    useEffect(() =>{
-
-
-           const person = getUser();
-    if(!person){
-return     
-    }
-
-    const person1_name = person.name;
-    const person1_role = person.role;
-
-
-
- set_user_name(person.name);
-        set_role(person.role);
-
-
-
-            const fetchUser = async ()=>{
-
-                const res = await fetch(`/user_info?name=${encodeURIComponent(person1_name)}&role=${encodeURIComponent(person1_role)}`);
-
-                const data = await res.json();
-
-
-
-                if(res.ok){
-
-                    set_user_id(data);
-                }
-         }
-
-         fetchUser();
-
-        }, []
-     )
-
-
 
 
     const handleSubmit = async (e) =>{
 
-        if(!user_id|| !shelt_id|| !message || !role){
+        if( !shelt_id|| !message ){
 
             return
         }
@@ -82,18 +45,15 @@ return
         const res1 = await fetch(`/conversations_start`,
 
             {method: "POST",
-                headers:{"Content-Type": "application/json"
+                headers:{"Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
                 },
                 body: JSON.stringify({
-                    user_id: user_id,
                     shelter_id: shelt_id
                 })
 
             }
         );
-
-
-
 
 
         const data = await res1.json();
@@ -115,12 +75,13 @@ return
 
 
 try{
-        const res2 = await fetch(`/messages_contact`, {
+        const res2 = await fetch(`/messages_contact_adopter`, {
 
             method: "POST",
-            headers:{'Content-Type': 'application/json'},
-            body: JSON.stringify({ sender_id: user_id,
-                sender_type: role,
+            headers:{'Content-Type': 'application/json',
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
                 message_text: message,
                 conversation_id: not_stale_conv_id
 

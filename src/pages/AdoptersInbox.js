@@ -2,23 +2,28 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { getUser } from "../components/Auth";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 
 
 export default function AdopterInbox (){
 
-
     const person = getUser();
+    const token = localStorage.getItem("token");
+    const user_id = person?.id;
 
-    const user_id = person.userId;
+    const [toast, setToast] = useState(null);
 
-    const role = person.role;
     const [messages, setMessages] = useState([]);
     const [conversations, setConversations] = useState([]);
     const [conversationsName, setConversationsName] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState("");
     const [headerName, setHeaderName] = useState("Select a conversation");
     const [message_text, setMessage_text] = useState("");
+
+    const [searchText, setSearchText] = useState("");
+
+    let conv_filtered = conversations;
 
 
     useEffect(() =>{
@@ -27,7 +32,10 @@ export default function AdopterInbox (){
         const getConversations = async () =>{
 
 
-            const res = await fetch(`/conversations/${user_id}`);
+            const res = await fetch(`/conversations/`,
+
+                {headers: {"Authorization": "Bearer " +token}}
+            );
 
             const data = await res.json();
             console.log(data)
@@ -50,7 +58,7 @@ export default function AdopterInbox (){
         };
 
         getConversations();
-    }, [user_id]);
+    }, [token]);
 
 
 
@@ -60,7 +68,9 @@ export default function AdopterInbox (){
 
 
 
-        const res = await fetch(`/messages/${conv.id}`);
+        const res = await fetch(`/messages/${conv.id}`,
+            {headers: {"Authorization" : "Bearer " + token}}
+        );
 
         const data = await res.json();
         console.log(data);
@@ -92,6 +102,10 @@ export default function AdopterInbox (){
 
         if(!selectedConversation){
 
+            setToast({type: "error",
+                message: "You have to select a conversation before you can send a message."}
+            )
+
             return
         }
 
@@ -99,15 +113,17 @@ export default function AdopterInbox (){
             {
 
                 method: "POST",
-                headers:{'Content-Type': 'application/json'},
-                   body:JSON.stringify({sender_id:user_id,
+                headers:{'Content-Type': 'application/json',
+                    "Authorization" : "Bearer " + token
+                },
+                   body:JSON.stringify({
                 conversation_id: selectedConversation.id,
                 message_text: message_text,
-            sender_type:role})
+            })
             }
         
         );
-            const data = res.json();
+            const data = await res.json();
 
             if(!res.ok){
 
@@ -115,13 +131,32 @@ export default function AdopterInbox (){
                 return
             }
 
+            setMessage_text("");
+            getMessages(selectedConversation);
+
     }
+
+
+    if(searchText && conversations.length >0){
+
+
+        conv_filtered = conversations.filter((conv) =>
+
+
+            conv.shelter_name.toLowerCase().includes(searchText.toLowerCase())
+        )
+    };
 
 
     return(
 
 
         <div className="adopters-messages-main">
+
+            {toast && (
+
+                <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
 
             <Sidebar></Sidebar>
@@ -158,13 +193,13 @@ export default function AdopterInbox (){
 
                     <input placeholder= "Search..." className="adopters-message-search"
                     type="text"
-                    onChange={(e) => getMessages(e.target.value)}>
+                    onChange={(e) => setSearchText(e.target.value)}>
                     
                     
                     </input>
 
 
-                    {conversations.map((convo) =>(
+                    {conv_filtered.map((convo) =>(
 
 
                     <button key = {convo.id} onClick={()=> getMessages(convo)} className= {selectedConversation?.id === convo.id ? "adopters-conversation-button active":

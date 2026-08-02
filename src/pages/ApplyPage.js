@@ -16,9 +16,7 @@ export default function ApplyPage(){
 
     const [toast, setToast] = useState(null);
 
-    const person = getUser();
-
-    const user_id = person.userId;
+    const token = localStorage.getItem("token");
 
     const [pets, setPets] = useState({})
 
@@ -76,11 +74,12 @@ export default function ApplyPage(){
 
     method:     "POST",
     headers:{
-        "Content-Type": 'application/json'
+        "Content-Type": 'application/json',
+        'Authorization': 'Bearer ' +token
     },
     body: JSON.stringify({...formData,
         pet_id: Number(pet_id),
-        user_id: Number(user_id)
+        
     })
 }
         )

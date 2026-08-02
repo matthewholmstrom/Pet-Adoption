@@ -8,9 +8,7 @@ import Toast from "../components/Toast";
 
 export default function AdopterApplicationsInbox (){
 
-    const person = getUser();
-
-    const user_id = person.userId;
+    const token = localStorage.getItem("token");
 
     const [toast, setToast] = useState(null);
 
@@ -53,15 +51,14 @@ export default function AdopterApplicationsInbox (){
 
     useEffect(() =>{
 
-        if(!user_id){
-            console.log("User ID is undefined.");
-            return
-        }
+      
 
 
         const getApplications = async () =>{
 
-            const res = await fetch(`/user_applications/${user_id}`,);
+            const res = await fetch(`/user_applications/`,
+                {headers: {"Authorization" : "Bearer " + token}}
+            );
 
             const data = await res.json();
 
@@ -81,7 +78,7 @@ export default function AdopterApplicationsInbox (){
 
         getApplications();
 
-    }, [user_id]);
+    }, [token]);
 
      
 
@@ -90,7 +87,9 @@ export default function AdopterApplicationsInbox (){
         const res = await fetch(`/user_applications/${id}`,
 
 
-           {method: "DELETE"
+           {method: "DELETE",
+
+            headers: {"Authorization" : "Bearer " + token}
 
 
            }

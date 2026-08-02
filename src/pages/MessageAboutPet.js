@@ -9,9 +9,7 @@ import Toast from "../components/Toast";
 export default function MessageAboutPet (){
 
 
-    const person = getUser();
-    const user_id = person.userId;
-    const role = person.role;
+    const token = localStorage.getItem("token");
 
     const [message, setMessage] = useState("");
     const [toast, setToast] = useState(null);
@@ -58,9 +56,9 @@ export default function MessageAboutPet (){
         e.preventDefault();
 
 
-        if(!pet_id||!shelt_info.shelter_id||!user_id||!message||!messageReason)
+        if(!pet_id||!shelt_info.shelter_id||!message||!messageReason)
         {
-            console.log("User ID, Shelter ID, message, reason, or Pet ID are missing.");
+            console.log("Shelter ID, message, reason, or Pet ID are missing.");
             return
         }
 
@@ -71,14 +69,15 @@ export default function MessageAboutPet (){
 
             method: "POST",
             headers:{
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization' : 'Bearer ' +token
             },
-            body: JSON.stringify({user_id:user_id,
+            body: JSON.stringify({
                 shelter_id: shelt_info.shelter_id,
                 message_text: message, 
-                pet_id: pet_id,
+                pet_id: Number(pet_id),
                 reason: messageReason,
-                role: role
+            
             })
         });
 

@@ -2,15 +2,19 @@ import React from "react";
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { getUser } from "../components/Auth";
+import Toast from "../components/Toast";
 
 
 export default function ShelterMessageInbox (){
 
     const person = getUser();
 
-    const u_id = person.userId;
+    const [toast, setToast] = useState(null);
+    const u_id = person.id;
 
     const user_role = person.role;
+
+    const token = localStorage.getItem("token");
 
 
     const [selected_conversation, setSelectedConversation] = useState("");
@@ -25,6 +29,8 @@ export default function ShelterMessageInbox (){
     const [message_text, setMessage_Text] = useState("");
     const [conversation_id, setCoversation_Id] = useState("");
 
+    let conv_filtered = conversations;
+
 
     useEffect(() =>{
 
@@ -32,7 +38,11 @@ export default function ShelterMessageInbox (){
         const getConversations = async () =>{
 
 
-            const res = await fetch(`/shelters_side_conversations/${u_id}`);
+            const res = await fetch(`/shelters_side_conversations/`,
+                {
+                    headers: {"Authorization": "Bearer " + token}
+                }
+            );
 
 
             const data = await res.json();
@@ -46,13 +56,21 @@ export default function ShelterMessageInbox (){
             }
 
             setConversations(data);
-        };
+
+
+            
+
+
+
+
+            }
+        
 
         getConversations();
 
 
 
-    }, [u_id]);
+    }, [token]);
 
 
     const showMessages = async (conv_id) =>{
@@ -60,7 +78,9 @@ export default function ShelterMessageInbox (){
         setMessages([]);
 
 
-        const res = await fetch(`/get_shelters_messages/${conv_id}`);
+        const res = await fetch(`/get_shelters_messages/${conv_id}`,{
+            headers: {"Authorization" : "Bearer " +token}}
+        );
 
 
         const data = await res.json();
@@ -90,14 +110,24 @@ console.log(conv_id);
             return
         };
 
+           if(!conversation_id){
+
+            setToast({type: "error",
+                message: "You have to select a conversation before you can send a message."}
+            )
+
+            return
+        }
+
 
 
         const res = await fetch('/messages_contact', {
 
             method: "POST",
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({  sender_id: u_id,
-                sender_type: user_role,
+            headers: {'Content-Type': 'application/json',
+                "Authorization": "Bearer " +token
+            },
+            body: JSON.stringify({
                 message_text: message_text,
                 conversation_id: conversation_id
 
@@ -123,9 +153,22 @@ console.log(conv_id);
 
 
 
+
+            if(searchName && conversations.length >0){
+
+                conv_filtered = conversations.filter((conv) =>
+                
+                    conv.user_name.toLowerCase().includes(searchName.toLocaleLowerCase()))}
+
+
     return(
 
         <div className="shelter-message-inbox-main">
+
+            {toast && (
+
+                <Toast toast={toast} closeToast={() => setToast(null)}></Toast>
+            )}
 
 
 
@@ -161,7 +204,7 @@ console.log(conv_id);
                             onChange={(e)=> setSearchName(e.target.value)}></input>
 
 
-                            {conversations && conversations.map((convo) =>(
+                            {conv_filtered && conv_filtered.map((convo) =>(
 
 
 

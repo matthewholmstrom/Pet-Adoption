@@ -1,20 +1,19 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
-
 import { getUser } from "../components/Auth";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import Toast from "../components/Toast";
 
 
 
 export default function CompleteShelterProfile (){
 
+
+    const token = localStorage.getItem("token");
+
     const navigate = useNavigate();
-
-    const person = getUser();
-
-    const user_id = person?.userId;
 
 
      const [formData, setFormData] = useState({
@@ -41,7 +40,6 @@ const updateShelter = async () =>{
 
     data.append("name", formData.name);
     
-    data.append("user_id", user_id);
     data.append("address", formData.address);
     data.append("city", formData.city);
     data.append("state", formData.state);
@@ -58,9 +56,9 @@ const updateShelter = async () =>{
 
 
         method: "PUT",
+        headers: {"Authorization": "Bearer " + token},
         body: data
-    })
-
+    });
 
     if(!res.ok){
 
@@ -72,7 +70,6 @@ const updateShelter = async () =>{
 
 
 }
-
 
     return(
 

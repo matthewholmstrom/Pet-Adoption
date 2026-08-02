@@ -9,9 +9,11 @@ import { getUser } from "../components/Auth";
 export default function PetInfo(){
 
     const user = getUser();
+
+
+    const token = localStorage.getItem("token");
     
     
-    const users_id = user?.userId;
 
     const user_role = user?.role;
 
@@ -19,8 +21,7 @@ export default function PetInfo(){
     console.log(id);
     const [pet, setPet] = useState([]);
     const [favorite, setFavorite] = useState(false);
-    const [userId, setUserId] = useState(null);
-    const [userName, setUserName] = useState(user?.name);
+    
     const [favoriteId, setFavoriteId] = useState(null);
 
 
@@ -59,10 +60,11 @@ export default function PetInfo(){
 const checkFavorite = async () =>{
 
     
-    setUserId(users_id);
 
 
-    const res = await fetch(`/check_favorite?user_id=${users_id}&pet_id=${id}`);
+    const res = await fetch(`/check_favorite?pet_id=${id}`,
+        {headers: {"Authorization": "Bearer " + token}}
+    );
     const data = await res.json();
 
     if(!res.ok){
@@ -85,7 +87,7 @@ const checkFavorite = async () =>{
 
 checkFavorite();
 
-    },[userId, id])
+    },[token, id]);
 
 
     const AddFavorite = async () =>{
@@ -94,9 +96,10 @@ checkFavorite();
     const res = await fetch('/favorites',{
 
             method: "POST",
-            headers:{'Content-Type': 'application/json'
+            headers:{'Content-Type': 'application/json',
+                "Authorization" : "Bearer " + token
             },
-            body: JSON.stringify({user_id: users_id,
+            body: JSON.stringify({
                 pet_id: id
     })
         })
@@ -121,7 +124,9 @@ checkFavorite();
 
             const res = await fetch(`/favorites/${fav_id}`, {
             
-                method: "Delete"
+                method: "Delete",
+
+                headers: {"Authorization": "Bearer " + token}
 
             }  )
 

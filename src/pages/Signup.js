@@ -57,16 +57,14 @@ headers: {
 
     })
 }
-        )
+        );
 
         const data = await res.json();
 
         if(res.ok){
-            const person = {"name"
-                : formData.fullname, role: role, userId: data.id}
+            const token = data.token;
 
-
-            localStorage.setItem("person", JSON.stringify(person))
+            localStorage.setItem("token", token);
 
 
              const person2 = getUser();

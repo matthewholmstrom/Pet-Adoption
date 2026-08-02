@@ -13,8 +13,7 @@ export default function AdoptersAccount(){
     const navigate = useNavigate();
 
 
-    const person = getUser();
-    const person_id = person.userId;
+    const token = localStorage.getItem("token");
 
     const [new_password, setNew_Password] = useState("");
     const [email, setEmail] = useState("");
@@ -45,8 +44,10 @@ export default function AdoptersAccount(){
 
             {
                 method: "PUT",
-                headers: {'Content-Type':'application/json'},
-                 body: JSON.stringify({user_id: person_id,
+                headers: {'Content-Type':'application/json',
+                    "Authorization" : "Bearer " + token
+                },
+                 body: JSON.stringify({
                     name:name
 
           })
@@ -87,8 +88,11 @@ if(!email.trim()){
     const res = await fetch(`/adopters_account_email`,
 
 {method: "PUT",
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({user_id: person_id,
+headers: {'Content-Type': 'application/json',
+                        "Authorization" : "Bearer " + token
+
+},
+body: JSON.stringify({
 email: email
 
 })});
@@ -136,11 +140,14 @@ if(!res.ok){
         {
 
             method: "PUT",
-            headers:{'Content-Type': 'application/json'},
+            headers:{'Content-Type': 'application/json',
+                                    "Authorization" : "Bearer " + token
+
+            },
             body: JSON.stringify({
                 new_password: new_password,
                 confirm_password: confirm_password,
-                user_id: person_id,
+              
                 old_password: old_password
 
             })
@@ -176,10 +183,13 @@ setConfirm_Password("");
     setShowModal(false);
 
 
-    const res = await fetch(`/adopters_account_delete/${person_id}`,
+    const res = await fetch(`/adopters_account_delete/`,
 
         {method: "DELETE",
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json',
+                                    "Authorization" : "Bearer " + token
+
+            }
         }
     );
 
@@ -370,7 +380,7 @@ name="confirm_password"></input>
     
 
 
-    <button onClick={() =>setShowModal(true)}>Delete Acount</button>
+    <button onClick={() =>setShowModal(true)}>Delete Account</button>
 </div>
 
 

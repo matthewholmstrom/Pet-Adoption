@@ -10,7 +10,8 @@ export default function Favorites (){
 
 
     const [favorites, setFavorites] = useState([]);
-    const user = getUser();
+
+    const token = localStorage.getItem("token");
     const [searchName, setSearchName] = useState("");
     const [petType, setPetType] = useState("All Types");
     const [shelter, setShelter] = useState("All Shelters");
@@ -20,15 +21,6 @@ export default function Favorites (){
 
 
      const [shelters, setShelters] = useState([])
-
-
-
-    const user_id = user.userId;
-    console.log("this is user id:", user_id);
-
-
-
-
 
 
     useEffect(() =>{
@@ -58,14 +50,13 @@ export default function Favorites (){
     useEffect(() =>{
 
 
-        if(!user_id){
-            return
-        }
 
         const getFavorites = async () =>{
 
 
-            const res = await fetch(`/users_favorites/${user_id}`);
+            const res = await fetch(`/users_favorites/`,
+                {headers: {"Authorization": "Bearer " + token}}
+            );
             const data = await res.json();
 
             if(!res.ok){
@@ -85,7 +76,7 @@ export default function Favorites (){
 
         getFavorites();
 
-    },[user_id]);
+    },[token]);
 
 
     let filtered_pets = searchName ? favorites.filter((fav) =>(
@@ -131,7 +122,8 @@ export default function Favorites (){
         const res = await fetch(`/favorites/${id}`,
             {
 
-                method: "DELETE"
+                method: "DELETE",
+                headers: {"Authorization": "Bearer " + token}
             }
         );
 

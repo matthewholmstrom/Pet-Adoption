@@ -10,8 +10,7 @@ import Toast from "../components/Toast";
 
 export default function ShelterEditInfo (){
 
-    const person = getUser();
-    const user_id = person?.userId;
+    const token = localStorage.getItem("token");
 
 
     const [imagePreview, setImagePreview] = useState(null);
@@ -26,7 +25,10 @@ export default function ShelterEditInfo (){
         const getShelter = async ()=>{
 
 
-            const res = await fetch(`/shelter_info/${user_id}`);
+            const res = await fetch(`/shelter_info/`,
+
+                {headers: {"Authorization" : "Bearer " + token}}
+            );
 
              if(!res.ok){
 
@@ -40,7 +42,7 @@ export default function ShelterEditInfo (){
         }
 
         getShelter();
-    }, [user_id])
+    }, [token])
 
 
 
@@ -62,7 +64,6 @@ formData.append("phone", shelter_info.phone);
 formData.append("website", shelter_info.website);
 formData.append("mission", shelter_info.mission);
 formData.append("hours", shelter_info.hours);
-formData.append("user_id", user_id);
 
 if(shelter_info.image_file){
 
@@ -72,6 +73,9 @@ if(shelter_info.image_file){
 const res = await fetch('/edit_shelter_info', {
 
     method: "PUT",
+
+    headers: {"Authorization" : "Bearer " + token},
+
     body: formData
 });
 
