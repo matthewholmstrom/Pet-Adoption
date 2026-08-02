@@ -170,9 +170,9 @@ Create a backend `.env` file with your database credentials.
 # Future Improvements
 
 - Deploy production version
-- Add JWT authentication
 - Move image storage to Cloudinary
 - Improve search functionality
+- Add other features
 
 # Image Credits
 
